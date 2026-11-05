@@ -1,0 +1,12 @@
+{
+  "extends": "./tsconfig.base.json",
+  "compilerOptions": {
+    "allowJs": true,
+    "checkJs": false,
+    // The Playwright specs run `page.evaluate` callbacks in the browser, so the DOM
+    // types have to be available here even though nothing in this project ships from
+    // the repo root.
+    "lib": ["ES2022", "DOM", "DOM.Iterable"]
+  },
+  "include": ["eslint.config.js", "vitest.config.ts", "playwright.config.ts", "e2e"]
+}

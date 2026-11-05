@@ -1,0 +1,52 @@
+{
+  "name": "truco",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Truco argentino 1v1 contra IA \u2014 informacion oculta real, motor de reglas puro",
+  "engines": {
+    "node": ">=20"
+  },
+  "scripts": {
+    "dev": "concurrently -n server,web -c cyan,magenta \"pnpm -C apps/server dev\" \"pnpm -C apps/web dev\"",
+    "build": "pnpm -C apps/web build && pnpm -C apps/server build",
+    "typecheck": "pnpm -r typecheck",
+    "lint": "eslint .",
+    "lint:fix": "eslint . --fix",
+    "format": "prettier --write .",
+    "format:check": "prettier --check .",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "coverage:engine": "pnpm -C packages/engine coverage",
+    "bench:ai": "pnpm -C packages/ai bench",
+    "e2e": "playwright test",
+    "check": "pnpm typecheck && pnpm lint && pnpm test && pnpm coverage:engine",
+    "prepare": "husky || true"
+  },
+  "devDependencies": {
+    "@eslint/js": "^9.39.0",
+    "@playwright/test": "^1.56.1",
+    "@types/node": "^24.10.1",
+    "@vitest/coverage-v8": "^3.2.4",
+    "concurrently": "^9.2.1",
+    "eslint": "^9.39.0",
+    "eslint-config-prettier": "^10.1.8",
+    "fast-check": "^4.3.0",
+    "globals": "^16.5.0",
+    "husky": "^9.1.7",
+    "lint-staged": "^16.2.6",
+    "prettier": "^3.6.2",
+    "typescript": "^5.9.3",
+    "typescript-eslint": "^8.46.2",
+    "vitest": "^3.2.4"
+  },
+  "lint-staged": {
+    "*.{ts,tsx}": [
+      "eslint --fix",
+      "prettier --write"
+    ],
+    "*.{json,md,css,yaml,yml}": [
+      "prettier --write"
+    ]
+  }
+}
