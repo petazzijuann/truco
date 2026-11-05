@@ -36,6 +36,44 @@ docker run --rm -p 3000:3000 truco
 Un único proceso sirve la API, el WebSocket y la web estática. Imagen multi-stage
 sobre `node:22-alpine`, corriendo como usuario sin privilegios.
 
+### En Vercel
+
+`vercel.json` define dos servicios sobre un mismo dominio:
+
+| Servicio | Raíz       | Cómo se construye                                    | Rutas públicas   |
+| -------- | ---------- | ---------------------------------------------------- | ---------------- |
+| `web`    | `apps/web` | framework `vite`, estático en el CDN                 | `/(.*)`          |
+| `server` | `.`        | `runtime: container`, usa el `Dockerfile` de la raíz | `/ws`, `/health` |
+
+```bash
+vercel dev     # levanta los dos servicios y enruta como en producción
+```
+
+**No hay bindings, y es a propósito.** Un binding inyecta la URL interna de un
+servicio en el _runtime del que lo llama_, y acá ningún servicio llama a otro: el
+único cruce es navegador → server por WebSocket, same-origin. `socketUrl()` arma
+`wss://<host>/ws` a partir de `window.location`, que es exactamente lo que el rewrite
+`/ws → server` resuelve, así que el cliente no necesita saber nada del despliegue.
+
+Para `pnpm dev` —donde Vite y Fastify son dos procesos sueltos— el proxy de Vite
+reenvía `/ws`, y su destino sale de `TRUCO_SERVER_URL` (por defecto
+`http://localhost:3000`). Bajo `vercel dev` ese proxy ni se consulta.
+
+Dos cosas que hay que verificar en la plataforma antes de confiarse, porque son
+propiedades de la app y no de la configuración:
+
+1. **Las partidas viven en memoria.** `SessionStore` guarda el `GameState` en el
+   proceso, y la reconexión busca el `sessionId` ahí. Con más de una instancia de
+   container, un jugador que reconecta puede caer en otra instancia y empezar una
+   partida nueva sin aviso. Hay que fijar el servicio a una sola instancia, o mover
+   las sesiones a un storage compartido.
+2. **El upgrade WebSocket tiene que atravesar el rewrite** hasta el container, y las
+   conexiones quedan abiertas minutos: la IA demora 600–1800 ms a propósito y hay
+   pausas entre manos.
+
+Si alguna de las dos no se sostiene, el `Dockerfile` de arriba corre la app completa
+en un solo proceso en cualquier host que acepte procesos largos.
+
 ---
 
 ## La idea central: información oculta de verdad
